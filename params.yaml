@@ -1,0 +1,52 @@
+data:
+  directory: data/raw
+  train_file: train.csv
+  val_file: val.csv
+  test_file: test.csv
+  mode: split
+  stage: raw
+  target: Depression
+
+split:
+  val_size: 0.20
+  seed: 56
+
+preprocessing:
+  enabled: true
+  rare_min_count: 5
+
+model:
+  name: catboost
+  params:
+    catboost:
+      iterations: 500
+      depth: 6
+      learning_rate: 0.05
+    logreg:
+      C: 1
+      max_iter: 2000
+      solver: lbfgs
+
+cv:
+  n_splits: 5
+  seed: 556
+  threshold: 0.5
+
+search:
+  enabled: false
+  scoring: accuracy
+  grid:
+    depth: [4, 6]
+    learning_rate: [0.03, 0.05]
+
+evaluation:
+  threshold: 0.5
+  importance:
+    top_n: 20
+    permutation: false
+    max_samples: 5000
+    n_repeats: 3
+
+mlflow:
+  experiment: mental-health-pipeline
+  directory: tracking

@@ -1,0 +1,206 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: ../.venv/bin/python pipeline.py prepare
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: a42072492b723ce95f47be708ccba77e.dir
+      size: 27462407
+      nfiles: 2
+    - path: modeling.py
+      hash: md5
+      md5: d04ab6a5c87b986264318e20de7332e6
+      size: 14301
+      isexec: true
+    - path: pipeline.py
+      hash: md5
+      md5: 7a987b6f5940304e701b20df065b98d4
+      size: 29801
+      isexec: true
+    params:
+      params.yaml:
+        data:
+          directory: data/raw
+          train_file: train.csv
+          val_file: val.csv
+          test_file: test.csv
+          mode: split
+          stage: raw
+          target: Depression
+        preprocessing:
+          enabled: true
+          rare_min_count: 5
+        split:
+          val_size: 0.2
+          seed: 56
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 2546a9f20c943c6672747e270ab199df.dir
+      size: 25670447
+      nfiles: 4
+  train:
+    cmd: ../.venv/bin/python pipeline.py train
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 2546a9f20c943c6672747e270ab199df.dir
+      size: 25670447
+      nfiles: 4
+    - path: modeling.py
+      hash: md5
+      md5: d04ab6a5c87b986264318e20de7332e6
+      size: 14301
+      isexec: true
+    - path: pipeline.py
+      hash: md5
+      md5: 7a987b6f5940304e701b20df065b98d4
+      size: 29801
+      isexec: true
+    - path: requirements.txt
+      hash: md5
+      md5: b02333ed375d1dee1e626d2053e4738b
+      size: 3326
+      isexec: true
+    params:
+      params.yaml:
+        cv:
+          n_splits: 5
+          seed: 556
+          threshold: 0.5
+        data:
+          directory: data/raw
+          train_file: train.csv
+          val_file: val.csv
+          test_file: test.csv
+          mode: split
+          stage: raw
+          target: Depression
+        mlflow:
+          experiment: mental-health-pipeline
+          directory: tracking
+        model:
+          name: catboost
+          params:
+            catboost:
+              iterations: 500
+              depth: 6
+              learning_rate: 0.05
+            logreg:
+              C: 1
+              max_iter: 2000
+              solver: lbfgs
+        preprocessing:
+          enabled: true
+          rare_min_count: 5
+        search:
+          enabled: false
+          scoring: accuracy
+          grid:
+            depth:
+            - 4
+            - 6
+            learning_rate:
+            - 0.03
+            - 0.05
+        split:
+          val_size: 0.2
+          seed: 56
+    outs:
+    - path: artifacts/models
+      hash: md5
+      md5: 99b05a7cf36a447639cf042804716411.dir
+      size: 5869447
+      nfiles: 4
+  evaluate:
+    cmd: ../.venv/bin/python pipeline.py evaluate
+    deps:
+    - path: artifacts/models
+      hash: md5
+      md5: 99b05a7cf36a447639cf042804716411.dir
+      size: 5869447
+      nfiles: 4
+    - path: data/processed
+      hash: md5
+      md5: 2546a9f20c943c6672747e270ab199df.dir
+      size: 25670447
+      nfiles: 4
+    - path: modeling.py
+      hash: md5
+      md5: d04ab6a5c87b986264318e20de7332e6
+      size: 14301
+      isexec: true
+    - path: pipeline.py
+      hash: md5
+      md5: 7a987b6f5940304e701b20df065b98d4
+      size: 29801
+      isexec: true
+    - path: requirements.txt
+      hash: md5
+      md5: b02333ed375d1dee1e626d2053e4738b
+      size: 3326
+      isexec: true
+    params:
+      params.yaml:
+        evaluation:
+          threshold: 0.5
+          importance:
+            top_n: 20
+            permutation: false
+            max_samples: 5000
+            n_repeats: 3
+        mlflow:
+          experiment: mental-health-pipeline
+          directory: tracking
+    outs:
+    - path: artifacts/reports/pipeline
+      hash: md5
+      md5: ddb25017193f68376a543c71cf58cba0.dir
+      size: 1045353
+      nfiles: 9
+  predict:
+    cmd: ../.venv/bin/python pipeline.py predict
+    deps:
+    - path: artifacts/models
+      hash: md5
+      md5: 99b05a7cf36a447639cf042804716411.dir
+      size: 5869447
+      nfiles: 4
+    - path: artifacts/reports/pipeline
+      hash: md5
+      md5: ddb25017193f68376a543c71cf58cba0.dir
+      size: 1045353
+      nfiles: 9
+    - path: data/processed
+      hash: md5
+      md5: 2546a9f20c943c6672747e270ab199df.dir
+      size: 25670447
+      nfiles: 4
+    - path: modeling.py
+      hash: md5
+      md5: d04ab6a5c87b986264318e20de7332e6
+      size: 14301
+      isexec: true
+    - path: pipeline.py
+      hash: md5
+      md5: 7a987b6f5940304e701b20df065b98d4
+      size: 29801
+      isexec: true
+    - path: requirements.txt
+      hash: md5
+      md5: b02333ed375d1dee1e626d2053e4738b
+      size: 3326
+      isexec: true
+    params:
+      params.yaml:
+        evaluation.threshold: 0.5
+        mlflow:
+          experiment: mental-health-pipeline
+          directory: tracking
+    outs:
+    - path: artifacts/final
+      hash: md5
+      md5: eb7162a77620ea3e58d853fe1c814234.dir
+      size: 2793358
+      nfiles: 3

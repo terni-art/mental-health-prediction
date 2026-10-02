@@ -1,0 +1,63 @@
+vars:
+  - params.yaml
+
+stages:
+  prepare:
+    cmd: ../.venv/bin/python pipeline.py prepare
+    deps:
+      - pipeline.py
+      - modeling.py
+      - ${data.directory}
+    params:
+      - data
+      - split
+      - preprocessing
+    outs:
+      - data/processed
+
+  train:
+    cmd: ../.venv/bin/python pipeline.py train
+    deps:
+      - pipeline.py
+      - modeling.py
+      - requirements.txt
+      - data/processed
+    params:
+      - data
+      - split
+      - preprocessing
+      - model
+      - cv
+      - search
+      - mlflow
+    outs:
+      - artifacts/models
+
+  evaluate:
+    cmd: ../.venv/bin/python pipeline.py evaluate
+    deps:
+      - pipeline.py
+      - modeling.py
+      - requirements.txt
+      - data/processed
+      - artifacts/models
+    params:
+      - evaluation
+      - mlflow
+    outs:
+      - artifacts/reports/pipeline
+
+  predict:
+    cmd: ../.venv/bin/python pipeline.py predict
+    deps:
+      - pipeline.py
+      - modeling.py
+      - requirements.txt
+      - data/processed
+      - artifacts/models
+      - artifacts/reports/pipeline
+    params:
+      - evaluation.threshold
+      - mlflow
+    outs:
+      - artifacts/final
