@@ -131,6 +131,21 @@ probability = model.predict_proba(test)[:, 1]
 
 Для переноса истории MLflow нужны tracking/mlflow.db и tracking/artifacts. В базе сохранены абсолютные пути к артефактам.
 
+## Тесты
+
+```bash
+../.venv/bin/python -m pytest -q
+../.venv/bin/ruff check .
+../.venv/bin/ruff format --check .
+../.venv/bin/python -m pip check
+```
+
+Для применения форматирования Python-файлов: ../.venv/bin/ruff format .
+
+Конфигурация находится в pyproject.toml. Ruff проверяет и форматирует Python-файлы, исключая данные и артефакты.
+
+Тесты используют небольшие синтетические данные. Они проверяют очистку, Missing/Rare/Unknown, отсутствие утечки val, согласованность преобразователей ноутбука и скриптов, выбор профиля через CLI, CV/GridSearch, сохранение модели, восстановление эксперимента, изоляцию отчетов и формат submission. Интеграционные проверки MLflow создают временное хранилище.
+
 ## Текущие результаты
 
 На новой подготовке данных ноутбук получил:
@@ -155,12 +170,13 @@ GridSearch выбрал исходные C=1 для LogReg и depth=6, learning_
 
 CatBoost немного лучше по CV и обеим оценкам Kaggle. LogReg примерно в 7.7 раза быстрее в исходном сравнении. Для итогового варианта выбран CatBoost, LogReg остается простой и быстрой альтернативой.
 
+
 ## Основные файлы
 
 - 1_eda.ipynb и 2_models.ipynb - исследование и результаты.
 - pipeline.py и modeling.py - команды этапов, преобразования, модели и CV.
 - params.yaml, dvc.yaml и dvc.lock - параметры и воспроизводимость.
-- requirements.txt - зафиксированное окружение.
+- requirements.txt, pyproject.toml и test_pipeline.py - окружение, качество и проверки.
 - data/raw, data/preprocessed и data/processed - исходные, исследовательские и текущие данные.
 - artifacts/reports/pipeline и artifacts/final - отчеты и финальная модель текущего запуска.
 - tracking и storage/dvc - локальная история MLflow и хранилище DVC.
